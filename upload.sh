@@ -1,7 +1,7 @@
 file=.pio/build/wt32-eth01/firmware.bin
 md5=($(md5 < $file))
 mode=firmware
-host=10.32.64.195
+host=<your device ip here>
 user=user
 pass=pass
 
