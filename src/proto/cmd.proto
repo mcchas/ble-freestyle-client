@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+/*
+
+GwaChannelCmd.protogwa.channel.cmdGwaLockPublic.protoGwaGatewayPublic.proto"
+RequestLockStateGet"Z
+RequestLockStateUpdate%
+
+desiredState (r.gwa.lock.State
+desiredStateToken ("
+RequestGatewayWiFiScan"×
+Request<
+
+lockStateGet (Z$.com.allegion.freestyle.models.proto.channel.cmd.RequestLockStateGetHB
+lockStateUpdate (Z'.com.allegion.freestyle.models.proto.channel.cmd.RequestLockStateUpdateHB
+gatewayWiFiScan (Z'.com.allegion.freestyle.models.proto.channel.cmd.RequestGatewayWiFiScanHB
+type"Y
+ConfirmLockStateGet&
+reportedState (r.com.allegion.freestyle.models.proto.lock.State
+reportedStateToken ("
+ConfirmLockStateUpdate%
+
+desiredState (r.com.allegion.freestyle.models.proto.lock.State&
+reportedState (r.com.allegion.freestyle.models.proto.lock.State
+reportedStateToken ("E
+ConfirmGatewayWiFiScan+
+apRecord (Z.com.allegion.freestyle.models.proto.gateway.WiFiApRecord"×
+Confirm<
+
+lockStateGet (Z$.com.allegion.freestyle.models.proto.channel.cmd.ConfirmLockStateGetHB
+lockStateUpdate (Z'.com.allegion.freestyle.models.proto.channel.cmd.ConfirmLockStateUpdateHB
+gatewayWiFiScan (Z'.com.allegion.freestyle.models.proto.channel.cmd.ConfirmGatewayWiFiScanHB
+type"C
+IndicationLockStateUpdate&
+reportedState (r.com.allegion.freestyle.models.proto.lock.State"[
+
+IndicationE
+lockStateUpdate (Z*.com.allegion.freestyle.models.proto.channel.cmd.IndicationLockStateUpdateHB
+type"
+
+Response"Ó
+GwaCmdMessage+
+request (Z.com.allegion.freestyle.models.proto.channel.cmd.RequestH+
+confirm (Z.com.allegion.freestyle.models.proto.channel.cmd.ConfirmH?
+
+indication (Zom.allegion.freestyle.models.proto.channel.cmd.IndicationH-
+response (Z.com.allegion.freestyle.models.proto.channel.cmd.ResponseHB
+typebproto3
+
+*/
+
+
+package cmd;
+
+enum State {
+    STATE_UNKNOWN = 0;
+    UNLOCKED = 1;
+    LOCKED_PRIVACY = 2;
+    LOCKED_DEADLOCK = 3;
+    ERROR_FORCED = 4;
+    ERROR_JAMMED = 5;
+}
+
+message RequestLockStateUpdate {
+    optional State desiredState = 1;
+    optional uint64 desiredStateToken = 2;
+}
+
+message RequestLockStateGet {
+   RequestLockStateUpdate request = 2;   
+}
+
+message Request {
+    optional RequestLockStateGet lockStateUpdate = 1;
+}
+
+message ConfirmLockStateUpdate {
+    optional State desiredState = 1;
+    optional State reportedState = 2;
+    optional uint64 desiredStateToken = 3;
+
+}
+
+message ConfirmLockStateGet {
+    ConfirmLockStateUpdate confirm = 2;
+}
+
+
+message Confirm {
+    optional ConfirmLockStateGet lockStateConfirm = 2;
+}
