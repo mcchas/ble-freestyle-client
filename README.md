@@ -1,18 +1,18 @@
-# wt32-freestyle-client
+# esp-freestyle-client
 
 ## Overview
 
-The **wt32-freestyle-client** is a BLE client for the [Gainsborough Freestyle Trilock](https://www.gainsboroughhardware.com.au/en/featured/gainsborough-freestyle.html) smart door lock. Made by Allegion, this client may also work with other Allegion locks.
+The **esp-freestyle-client** is a ESP32 based BLE client for the [Gainsborough Freestyle Trilock](https://www.gainsboroughhardware.com.au/en/featured/gainsborough-freestyle.html) smart door lock. Made by Gainsborough/Allegion, this client may also work with other Allegion locks.
 
-Originally developed for a common WROOM32 ESP32, I transitioned to an Ethernet-based board to improve BLE connection consistency, as the ESP32 can't run both WiFi and BLE simultaneously.
+Developed for Ethernet-based boards to improve BLE connection consistency, as the ESP32 can't run both WiFi and BLE simultaneously.
 
-Using this client, you can lock/unlock the door in under 2 seconds, compared to the cloud API's 20-30 second response time.
+Using this client, you can lock/unlock the door in under 2 seconds, compared to the cloud API's 20-30 second reaction time.
 
-This can remove the need for cloud connectivity for your lock.
+This can also remove the need for cloud connectivity for your lock.
 
 ## Getting Started
 
-Designed for the [WT32-ETH01](https://github.com/egnor/wt32-eth01) development board (an ESP32 with Ethernet). Other boards using the same PHY will work, other hardware would take some adaptations.
+Designed for the [WT32-ETH01](https://github.com/egnor/wt32-eth01) development board (an ESP32 module with Ethernet). Other boards using the same PHY will work, other hardware may with some adaptations.
 
 ### Programming the WT32
 
@@ -40,16 +40,13 @@ Designed for the [WT32-ETH01](https://github.com/egnor/wt32-eth01) development b
 | Option        | Description                                         |
 |---------------|-----------------------------------------------------|
 | Hostname      | Any name for this device                            |
-| AES Key       | The base64 encoded value of the Offline Key for your lock |
-| BLE Mac       | The Bluetooth MAC address of your lock              |
+| AES Key       | The base64 encoded value of the Offline Key for your lock* |
+| BLE Mac       | The Bluetooth MAC address of your lock*              |
 | MQTT Server   | MQTT server IP address                              |
 | MQTT Topic    | Topic to use, defaults to `trilock`                 |
 | HTTP Username | Username for web/api/ota, default is blank          |
 | HTTP Password | Password for web/api/ota, default is blank          |
 
-## Disclaimer
-
-This is a reverse engineering project and is not affiliated with Gainsborough or Allegion.
 
 ## To Do
 
@@ -57,3 +54,7 @@ This is a reverse engineering project and is not affiliated with Gainsborough or
 - Support repurposing the Freestyle Bridge (built on ESP8266 + EFR32)
 - Retrieve keys to decrypt Sync channel messages (e.g., door open/closed notifications, config etc)
 - Support fragmented packets (not needed for lock/unlock)
+
+## Disclaimer
+
+This is a reverse engineered project and is not affiliated with Gainsborough or Allegion.
