@@ -171,6 +171,12 @@ void FreestyleClient::setLockState(uint8_t state, bool skipConnect) {
 }
 
 void FreestyleClient::setLockState(uint8_t state) {
+
+  if (millis() - notify_time < TIMEOUT) {
+    Log.println("Error: setLockState already called");
+    return;
+  }
+
   desiredLockState = state;
   Log.print("Setting lock state to ");
   Log.println(getLockState(desiredLockState));
