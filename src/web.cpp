@@ -77,6 +77,11 @@ void Web::begin(AsyncWebServer *server, EspConfig *cfg) {
       strncpy(_cfg->http_pass, message.c_str(), message.length());
       save = true;
     }
+    if (request->hasParam("syslog_server", true)) {
+      message = request->getParam("syslog_server", true)->value();
+      strncpy(_cfg->syslog_server, message.c_str(), message.length());
+      save = true;
+    }
     if (!save) {
       request->send(404, "text/plain", "not found\n");
       return;
@@ -96,6 +101,7 @@ void Web::begin(AsyncWebServer *server, EspConfig *cfg) {
     response->printf("\"mqtt_topic\": \"%s\"", _cfg->mqtt_topic);
     response->printf("\"http_user\": \"%s\"", _cfg->http_user);
     response->printf("\"http_pass\": \"%s\"}", _cfg->http_pass);
+    response->printf("\"syslog_server\": \"%s\"}", _cfg->syslog_server);
     request->send(response);
   });
 
@@ -137,6 +143,8 @@ void Web::begin(AsyncWebServer *server, EspConfig *cfg) {
     response->printf("  <input type=\"text\" id=\"http_user\" name=\"http_user\" value=\"%s\"><br><br>", _cfg->http_user);
     response->print("  <label for=\"http_pass\">HTTP Password:</label><br>");
     response->printf("  <input type=\"text\" id=\"http_pass\" name=\"http_pass\" value=\"%s\"><br><br>", _cfg->http_pass);
+    response->print("  <label for=\"syslog_server\">Syslog Server:</label><br>");
+    response->printf("  <input type=\"text\" id=\"syslog_server\" name=\"syslog_server\" value=\"%s\"><br><br>", _cfg->syslog_server);
     response->print("<button name='save' type='submit'>Save</button>");
     response->print("</form><br>");
     response->print("<form action=\"/reboot\" method=\"post\">");

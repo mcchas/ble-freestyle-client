@@ -69,15 +69,7 @@ size_t SyslogStream::write(uint8_t c) {
         else
           syslog.beginPacket(WiFi.gatewayIP(), _syslogPort);
 
-        if (_raw)
-          syslog.printf("%s\n", logbuff);
-        else {
-#ifdef ESP32
-          syslog.printf("<134> Jan 01 00:00:00 1: %s", logbuff);
-#else
-          syslog.printf("<134> %s %s %s", p, identifier().c_str(), logbuff);
-#endif
-        };
+        syslog.printf("<134> Jan 01 00:00:00 1: %s", logbuff);
         syslog.endPacket();
       };
     };

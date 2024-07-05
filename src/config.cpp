@@ -19,6 +19,7 @@ auto EspConfig::saveConfig() -> bool {
   json["ble_mac"] = ble_mac;
   json["http_user"] = http_user;
   json["http_pass"] = http_pass;
+  json["syslog_server"] = syslog_server;
 
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile) {
@@ -99,6 +100,12 @@ auto EspConfig::initEspConfig() -> bool {
             strcpy(http_pass, json["http_pass"]);
           } else {
             strncpy(http_pass, "pass", 17);
+          }
+
+          if (json.containsKey("syslog_server")) {
+            strcpy(syslog_server, json["syslog_server"]);
+          } else {
+            strncpy(syslog_server, SYSLOG_SERVER, 17);
           }
 
         } else {
