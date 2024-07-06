@@ -105,7 +105,7 @@ auto EspConfig::initEspConfig() -> bool {
           if (json.containsKey("syslog_server")) {
             strcpy(syslog_server, json["syslog_server"]);
           } else {
-            strncpy(syslog_server, SYSLOG_SERVER, 17);
+            strncpy(syslog_server, SYSLOG_SERVER, 40);
           }
 
         } else {

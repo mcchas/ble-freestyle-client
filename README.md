@@ -2,7 +2,7 @@
 
 ## Overview
 
-The **esp-freestyle-client** is a ESP32 based BLE client for the [Gainsborough Freestyle Trilock](https://www.gainsboroughhardware.com.au/en/featured/gainsborough-freestyle.html) smart door lock. Made by Gainsborough/Allegion, this client may also work with other Allegion locks.
+An ESP32 based BLE client for the [Gainsborough Freestyle Trilock](https://www.gainsboroughhardware.com.au/en/featured/gainsborough-freestyle.html) smart door lock (Made by Gainsborough/Allegion), this client may also work with other Allegion locks.
 
 Developed for Ethernet-based boards to improve BLE connection consistency, as the ESP32 can't run both WiFi and BLE simultaneously.
 
@@ -46,6 +46,7 @@ Designed for the [WT32-ETH01](https://github.com/egnor/wt32-eth01) development b
 | MQTT Topic    | Topic to use, defaults to `trilock`                 |
 | HTTP Username | Username for web/api/ota, default is blank          |
 | HTTP Password | Password for web/api/ota, default is blank          |
+| Syslog Server | Optional Syslog server IP address (udp/514)         |
 
 
 ## To Do

@@ -17,7 +17,7 @@ auto encodeMessage(char *key, unsigned char *input, uint8_t inputLen,
 
   Log.print("AES Key: ");
   for (int i = 0; i < keySize; i++) {
-    if (i > 6 || i< 26)
+    if (i > 6 && i< 26)
       Log.print("XX");
     else {
       char str[3];

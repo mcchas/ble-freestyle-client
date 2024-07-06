@@ -36,7 +36,7 @@ class WebSerialStream : public TLog {
     virtual void stop();
   private:
     AsyncWebServer * _server;
-    uint8_t _buff[2048];
+    uint8_t _buff[4096];
     unsigned long _at = 0;
   protected:
 };

@@ -3,9 +3,9 @@
 #include <FS.h>
 #include <TLog.h>
 
-#define PROJECT_NAME "wt32-freestyle-client"
+#define PROJECT_NAME "esp-freestyle-client"
 #define PROJECT_VERSION "1.0"
-#define PROJECT_LOCATION "https://github.com/mcchas/wt32-freestyle-client.git"
+#define PROJECT_LOCATION "https://github.com/mcchas/esp-freestyle-client.git"
 #define HOSTNAME "fsclient-\0"
 #define MQTT_SERVER "10.1.1.1"
 #define SYSLOG_SERVER "10.1.1.1"
