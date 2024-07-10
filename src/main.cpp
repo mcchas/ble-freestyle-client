@@ -8,6 +8,7 @@
 #include <ETH.h>
 #include <PubSubClient.h>
 #include <WebSerialStream.h>
+#include <SyslogStream.h>
 #include <WiFiClient.h>
 #include <base64.h>
 
@@ -143,9 +144,18 @@ void setup() {
   WebSerialStream Logger = WebSerialStream();
   Log.addPrintStream(std::make_shared<WebSerialStream>(Logger));
 
-  Log.println("Starting " PROJECT_NAME " v" PROJECT_VERSION);
-
   cfg.initEspConfig();
+
+  
+  SyslogStream SysLogger = SyslogStream();
+  if (cfg.syslog_server[0] != '\0') {
+    SysLogger.setDestination(cfg.syslog_server);
+    SysLogger.setPort(514);
+    SysLogger.begin();
+    Log.addPrintStream(std::make_shared<SyslogStream>(SysLogger));
+  }
+
+  Log.println("Starting " PROJECT_NAME " v" PROJECT_VERSION);
 
   char buf[100];
   Base64.decode(buf, cfg.aes_key, 100);

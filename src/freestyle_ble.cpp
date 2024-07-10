@@ -59,7 +59,7 @@ void parse0x01(unsigned char *data, int len) {
   Log.printf(" -> doAiMsgIdTrf: 0x%02X%02X\n", data[2], data[3]);
   Log.printf(" -> doAiMsgLen: 0x%02X%02X\n", data[4], data[5]);
   Log.printf(" -> doAiMsgCrc: 0x%02X%02X%02X%02X\n", data[6], data[7], data[8], data[9]);
-  Log.printf(" -> doAiMsgCount: %d", data[10]);
+  Log.printf(" -> doAiMsgCount: %d\n", data[10]);
   Log.printf(" -> doAiMsgId: 0x%02X%02X\n", data[11], data[12]);
   Log.println();
 }
@@ -171,6 +171,12 @@ void FreestyleClient::setLockState(uint8_t state, bool skipConnect) {
 }
 
 void FreestyleClient::setLockState(uint8_t state) {
+
+  if (millis() - notify_time < TIMEOUT) {
+    Log.println("Error: setLockState already called");
+    return;
+  }
+
   desiredLockState = state;
   Log.print("Setting lock state to ");
   Log.println(getLockState(desiredLockState));
