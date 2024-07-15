@@ -53,6 +53,14 @@ void printHex(unsigned char *data, uint8_t len) {
 }
 
 void parse0x01(unsigned char *data, int len) {
+  Log.print("Received data: ");
+  for (int i = 0; i < len; i++) {
+    char str[3];
+    sprintf(str, "%02x", data[i]);
+    Log.print(str);
+  }
+  Log.println();
+  
   Log.println("###### DoAi status query response ######");
   Log.println("Transfer Status field");
   Log.printf(" -> doAiFlags: 0x%02X\n", data[1]);
@@ -65,8 +73,18 @@ void parse0x01(unsigned char *data, int len) {
 }
 
 void parse0x02(unsigned char *data, int len) {
+  Log.print("Received data: ");
+  for (int i = 0; i < len; i++) {
+    char str[3];
+    sprintf(str, "%02x", data[i]);
+    Log.print(str);
+  }
+  Log.println();
+
   Log.print(" -> DiAoMsgId: ");
-  Log.println(data[18], 10);
+  unsigned short msgId = (data[19]<<8 | data[18]);
+  Log.println(msgId);
+  // Log.println(data[18], 10);
   Log.print(" -> DiAoNonce (hex): ");
   for (int i = 6; i < len - 2; i++) {
     char str[3];
@@ -269,7 +287,10 @@ void FreestyleClient::handler() {
 }
 
 void FreestyleClient::generatePayload() {
-  unsigned short msgId = this->notify_pData[18];
+  // unsigned short msgId = this->notify_pData[18];
+
+  unsigned short msgId = (this->notify_pData[19]<<8 | this->notify_pData[18]);
+
   char nonce[12];
   memcpy(nonce, this->notify_pData + 6, 12);
 
@@ -321,17 +342,34 @@ void FreestyleClient::generatePayload() {
 
   // send request to accept encoded message
   unsigned char thisMsgId = this->notify_pData[18] + 1;
+
+  msgId++;
+
   unsigned char writeBack[] = {
-      0x20,                   // 0
-      thisMsgId,              // 1
-      this->notify_pData[19], // 2
-      msgLen,                 // 3
-      0x00                    // 4
+    0x20,                   // 0
+    msgId,                  // 1
+    (msgId>>8),             // 2
+    msgLen,                 // 3
+    0x00                    // 4
   };
 
+  // unsigned char writeBack[] = {
+  //     0x20,                   // 0
+  //     thisMsgId,              // 1
+  //     this->notify_pData[19], // 2
+  //     msgLen,                 // 3
+  //     0x00                    // 4
+  // };
+
+  // 20 00 00 32 00
+
   encodedMessageDataLen = msgLen;
-  encodedMessageId[0] = this->notify_pData[18] + 1;
-  encodedMessageId[1] = this->notify_pData[19];
+  // encodedMessageId[0] = this->notify_pData[18] + 1;
+  // encodedMessageId[1] = this->notify_pData[19];
+  encodedMessageId[0] = msgId;
+  encodedMessageId[1] = (msgId>>8);
+
+  // 20 01 00 3200
 
   Log.print("Sending request to accept new message\n");
   printHex(writeBack, sizeof(writeBack));
@@ -370,6 +408,8 @@ void FreestyleClient::sendEncodedMessage() {
       crcI >> 16,            // 7
       crcI >> 24,            // 8
   };
+
+  // 21 00 01 3200 6ee3a380
 
   Log.println("Sending CRC");
   printHex(endMsg, sizeof(endMsg));
