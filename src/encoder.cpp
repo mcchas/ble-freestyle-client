@@ -90,18 +90,12 @@ auto encodeMessage(char *key, unsigned char *input, uint8_t inputLen,
     0x00        // 5
   };
 
-  // 00 01 00 000c00313ef3487a1ba95a7fca2f2719a3c835e308bda60290b06c4c6b351eed54f1f0e7258be04af803141fc1b757
-
-  // header[2] = msgId;
-  // header[4] = inputLen;
-
   mbedtls_gcm_setkey(&aes, MBEDTLS_CIPHER_ID_AES, (const unsigned char *)key,
                      keySize * 8);
   mbedtls_gcm_starts(&aes, MBEDTLS_GCM_ENCRYPT, (const unsigned char *)finalIV,
                      ivLen, header, sizeof(header));
   mbedtls_gcm_update(&aes, sizeof(paddedInput), paddedInput, output);
 
-  // unsigned char tag[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   unsigned char tag[16] = {0};
   mbedtls_gcm_finish(&aes, tag, sizeof(tag));
   mbedtls_gcm_free(&aes);

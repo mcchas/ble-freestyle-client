@@ -18,10 +18,12 @@ static uint8_t setState = cmd_State_STATE_UNKNOWN;
 static uint8_t webLockAction = 0;
 static int8_t lockStatus = -1;
 static uint8_t desiredState = cmd_State_STATE_UNKNOWN;
+static long cbEventTime = 0;
 
 void lockCallback(uint8_t _desiredState, int8_t _reportedState) {
   desiredState = _desiredState;
   lockStatus = _reportedState;
+  cbEventTime = millis();
 };
 
 void webActionCallback(uint8_t data) {
@@ -183,6 +185,7 @@ void setup() {
 
 void loop() {
   static uint8_t retries = 0;
+  static long setLockStateTime = 0;
 
   lock.handler();
 
@@ -192,6 +195,7 @@ void loop() {
     if (setState == CB_CONNECT) {
       lock.connect();
     } else {
+      setLockStateTime = millis();
       lock.setLockState(setState);
     }
     setState = 0;
@@ -203,6 +207,7 @@ void loop() {
     if (webLockAction == CB_CONNECT) {
       lock.connect();
     } else {
+      setLockStateTime = millis();
       lock.setLockState(webLockAction);
     }
     webLockAction = 0;
@@ -234,6 +239,7 @@ void loop() {
         char str[32];
         sprintf(str, "%s/success", cfg.mqtt_topic);
         mqttClient.publish(str, stateString.c_str());
+        Log.printf("Lock action took %lums\n", cbEventTime - setLockStateTime);
       }
       lockStatus = -1;
     }

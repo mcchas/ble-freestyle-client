@@ -84,7 +84,6 @@ void parse0x02(unsigned char *data, int len) {
   Log.print(" -> DiAoMsgId: ");
   unsigned short msgId = (data[19]<<8 | data[18]);
   Log.println(msgId);
-  // Log.println(data[18], 10);
   Log.print(" -> DiAoNonce (hex): ");
   for (int i = 6; i < len - 2; i++) {
     char str[3];
@@ -131,7 +130,6 @@ auto FreestyleClient::connect() -> bool {
   this->pRemoteCharacteristic301 = nullptr;
 
   Log.println("Connecting");
-  Log.println(" - Created client");
   this->pClient->connect();
   Log.println(" - Connected to server");
   Log.print(" - RSSI:");
@@ -175,6 +173,16 @@ void FreestyleClient::init(char *a_key, std::string a_mac) {
   esp_bredr_tx_power_get(&min, &max);
   Log.printf("BLE power level: min %d max %d\n", min, max);
   this->pClient = NimBLEDevice::createClient(NimBLEAddress(this->mac, 1));
+  // lock has a beacon interval of ~1024ms
+  // 800 * 0.625 is 500ms
+  this->pClient->setConnectionParams(
+    BLE_GAP_INITIAL_CONN_ITVL_MIN,        // minInterval (x0.625ms)
+    BLE_GAP_INITIAL_CONN_ITVL_MAX,        // maxInterval (x0.625ms)
+    BLE_GAP_INITIAL_CONN_LATENCY,         // latency 
+    BLE_GAP_INITIAL_SUPERVISION_TIMEOUT,  // timeout (x10ms)
+    800,                                  // scanInterval (x0.625ms, NimBLE Default is 16)
+    800                                   // scanWindow (x0.625ms, NimBLE Default is 16)
+  );
 }
 
 void FreestyleClient::setLockState(uint8_t state, bool skipConnect) {
@@ -287,8 +295,6 @@ void FreestyleClient::handler() {
 }
 
 void FreestyleClient::generatePayload() {
-  // unsigned short msgId = this->notify_pData[18];
-
   unsigned short msgId = (this->notify_pData[19]<<8 | this->notify_pData[18]);
 
   char nonce[12];
@@ -353,23 +359,9 @@ void FreestyleClient::generatePayload() {
     0x00                    // 4
   };
 
-  // unsigned char writeBack[] = {
-  //     0x20,                   // 0
-  //     thisMsgId,              // 1
-  //     this->notify_pData[19], // 2
-  //     msgLen,                 // 3
-  //     0x00                    // 4
-  // };
-
-  // 20 00 00 32 00
-
   encodedMessageDataLen = msgLen;
-  // encodedMessageId[0] = this->notify_pData[18] + 1;
-  // encodedMessageId[1] = this->notify_pData[19];
-  encodedMessageId[0] = msgId;
+  encodedMessageId[0] = msgId; // FIXME
   encodedMessageId[1] = (msgId>>8);
-
-  // 20 01 00 3200
 
   Log.print("Sending request to accept new message\n");
   printHex(writeBack, sizeof(writeBack));
@@ -408,8 +400,6 @@ void FreestyleClient::sendEncodedMessage() {
       crcI >> 16,            // 7
       crcI >> 24,            // 8
   };
-
-  // 21 00 01 3200 6ee3a380
 
   Log.println("Sending CRC");
   printHex(endMsg, sizeof(endMsg));
