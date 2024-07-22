@@ -81,25 +81,28 @@ auto encodeMessage(char *key, unsigned char *input, uint8_t inputLen,
   }
   Log.println();
 
-  unsigned char someBytes[6] = {0x00, 0x00, 0x0d, 0x00, 0x0f, 0x00};
-
-  someBytes[2] = msgId;
-  someBytes[4] = inputLen;
+  unsigned char header[6] = {
+    0x00,       // 0
+    0x00,       // 1
+    (msgId>>8), // 2
+    msgId,      // 3
+    inputLen,   // 4
+    0x00        // 5
+  };
 
   mbedtls_gcm_setkey(&aes, MBEDTLS_CIPHER_ID_AES, (const unsigned char *)key,
                      keySize * 8);
   mbedtls_gcm_starts(&aes, MBEDTLS_GCM_ENCRYPT, (const unsigned char *)finalIV,
-                     ivLen, someBytes, sizeof(someBytes));
+                     ivLen, header, sizeof(header));
   mbedtls_gcm_update(&aes, sizeof(paddedInput), paddedInput, output);
 
-  // unsigned char tag[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   unsigned char tag[16] = {0};
   mbedtls_gcm_finish(&aes, tag, sizeof(tag));
   mbedtls_gcm_free(&aes);
 
   auto *message = new unsigned char[inputLen + 6 + 12 + padLen + 16];
 
-  memcpy(message, &someBytes, 6);
+  memcpy(message, &header, 6);
   memcpy(message + 6, iv2, 12);
   memcpy(message + 6 + 12, output, inputLen + padLen);
   memcpy(message + 6 + 12 + inputLen + padLen, tag, 16);

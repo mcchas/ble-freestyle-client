@@ -53,6 +53,14 @@ void printHex(unsigned char *data, uint8_t len) {
 }
 
 void parse0x01(unsigned char *data, int len) {
+  Log.print("Received data: ");
+  for (int i = 0; i < len; i++) {
+    char str[3];
+    sprintf(str, "%02x", data[i]);
+    Log.print(str);
+  }
+  Log.println();
+  
   Log.println("###### DoAi status query response ######");
   Log.println("Transfer Status field");
   Log.printf(" -> doAiFlags: 0x%02X\n", data[1]);
@@ -65,8 +73,17 @@ void parse0x01(unsigned char *data, int len) {
 }
 
 void parse0x02(unsigned char *data, int len) {
+  Log.print("Received data: ");
+  for (int i = 0; i < len; i++) {
+    char str[3];
+    sprintf(str, "%02x", data[i]);
+    Log.print(str);
+  }
+  Log.println();
+
   Log.print(" -> DiAoMsgId: ");
-  Log.println(data[18], 10);
+  unsigned short msgId = (data[19]<<8 | data[18]);
+  Log.println(msgId);
   Log.print(" -> DiAoNonce (hex): ");
   for (int i = 6; i < len - 2; i++) {
     char str[3];
@@ -113,7 +130,6 @@ auto FreestyleClient::connect() -> bool {
   this->pRemoteCharacteristic301 = nullptr;
 
   Log.println("Connecting");
-  Log.println(" - Created client");
   this->pClient->connect();
   Log.println(" - Connected to server");
   Log.print(" - RSSI:");
@@ -157,6 +173,16 @@ void FreestyleClient::init(char *a_key, std::string a_mac) {
   esp_bredr_tx_power_get(&min, &max);
   Log.printf("BLE power level: min %d max %d\n", min, max);
   this->pClient = NimBLEDevice::createClient(NimBLEAddress(this->mac, 1));
+  // lock has a beacon interval of ~1024ms
+  // 800 * 0.625 is 500ms
+  this->pClient->setConnectionParams(
+    BLE_GAP_INITIAL_CONN_ITVL_MIN,        // minInterval (x0.625ms)
+    BLE_GAP_INITIAL_CONN_ITVL_MAX,        // maxInterval (x0.625ms)
+    BLE_GAP_INITIAL_CONN_LATENCY,         // latency 
+    BLE_GAP_INITIAL_SUPERVISION_TIMEOUT,  // timeout (x10ms)
+    800,                                  // scanInterval (x0.625ms, NimBLE Default is 16)
+    800                                   // scanWindow (x0.625ms, NimBLE Default is 16)
+  );
 }
 
 void FreestyleClient::setLockState(uint8_t state, bool skipConnect) {
@@ -269,7 +295,8 @@ void FreestyleClient::handler() {
 }
 
 void FreestyleClient::generatePayload() {
-  unsigned short msgId = this->notify_pData[18];
+  unsigned short msgId = (this->notify_pData[19]<<8 | this->notify_pData[18]);
+
   char nonce[12];
   memcpy(nonce, this->notify_pData + 6, 12);
 
@@ -321,17 +348,20 @@ void FreestyleClient::generatePayload() {
 
   // send request to accept encoded message
   unsigned char thisMsgId = this->notify_pData[18] + 1;
+
+  msgId++;
+
   unsigned char writeBack[] = {
-      0x20,                   // 0
-      thisMsgId,              // 1
-      this->notify_pData[19], // 2
-      msgLen,                 // 3
-      0x00                    // 4
+    0x20,                   // 0
+    msgId,                  // 1
+    (msgId>>8),             // 2
+    msgLen,                 // 3
+    0x00                    // 4
   };
 
   encodedMessageDataLen = msgLen;
-  encodedMessageId[0] = this->notify_pData[18] + 1;
-  encodedMessageId[1] = this->notify_pData[19];
+  encodedMessageId[0] = msgId; // FIXME
+  encodedMessageId[1] = (msgId>>8);
 
   Log.print("Sending request to accept new message\n");
   printHex(writeBack, sizeof(writeBack));
