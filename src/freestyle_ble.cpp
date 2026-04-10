@@ -148,11 +148,54 @@ auto FreestyleClient::connect() -> bool {
   if (this->pRemoteCharacteristic301 == nullptr) {
     Log.print("Failed to find characteristic: ");
     Log.println(charUUID301.toString().c_str());
+
+    // Dump known characteristics from the service for debugging
+    {
+      auto *chars = pRemoteService->getCharacteristics(true);
+      if (chars) {
+        Log.println("Available characteristics:");
+        for (auto *c : *chars) {
+          Log.printf("  %s (handle 0x%04x) notify=%d indicate=%d write=%d writeNoResp=%d\n",
+                     c->getUUID().toString().c_str(),
+                     c->getHandle(),
+                     c->canNotify(),
+                     c->canIndicate(),
+                     c->canWrite(),
+                     c->canWriteNoResponse());
+        }
+      }
+    }
+
     this->disconnect();
     return false;
   }
   Log.println(" - Found characteristic 301");
-  this->pRemoteCharacteristic301->subscribe(false, FreestyleClient::notifyCallback);
+  Log.printf("  properties: notify=%d indicate=%d write=%d writeNoResp=%d\n",
+             this->pRemoteCharacteristic301->canNotify(),
+             this->pRemoteCharacteristic301->canIndicate(),
+             this->pRemoteCharacteristic301->canWrite(),
+             this->pRemoteCharacteristic301->canWriteNoResponse());
+
+  // Ensure notifications/indications are enabled (some locks use indications)
+  {
+    bool canNotify = this->pRemoteCharacteristic301->canNotify();
+    bool canIndicate = this->pRemoteCharacteristic301->canIndicate();
+    bool ok = false;
+
+    if (canNotify) {
+      ok = this->pRemoteCharacteristic301->subscribe(true, FreestyleClient::notifyCallback, true);
+      Log.printf("  subscribe(notifications, response) returned %d\n", ok);
+    }
+
+    if (!ok && canIndicate) {
+      ok = this->pRemoteCharacteristic301->subscribe(false, FreestyleClient::notifyCallback, true);
+      Log.printf("  subscribe(indications, response) returned %d\n", ok);
+    }
+
+    if (!ok) {
+      Log.println("  WARNING: failed to enable notifications/indications");
+    }
+  }
 
   Log.println(" - Connected to lock");
   connected = true;
@@ -193,7 +236,15 @@ void FreestyleClient::setLockState(uint8_t state, bool skipConnect) {
   Log.print("Setting lock state to ");
   Log.println(getLockState(desiredLockState));
   Log.println("Writing 02 to command channel");
-  this->pRemoteCharacteristic301->writeValue(0x02, true);
+  {
+    uint8_t cmd[] = {0x02};
+    bool ok = this->pRemoteCharacteristic301->writeValue(cmd, sizeof(cmd), false);
+    if (!ok) {
+      Log.println("  writeValue(false) failed; retrying with response");
+      ok = this->pRemoteCharacteristic301->writeValue(cmd, sizeof(cmd), true);
+    }
+    Log.printf("  writeValue returned %d\n", ok);
+  }
 }
 
 void FreestyleClient::setLockState(uint8_t state) {
@@ -224,7 +275,15 @@ auto FreestyleClient::begin() -> bool {
     return false;
   }
   Log.println("Writing 02 to command channel");
-  this->pRemoteCharacteristic301->writeValue(0x02, true);
+  {
+    uint8_t cmd[] = {0x02};
+    bool ok = this->pRemoteCharacteristic301->writeValue(cmd, sizeof(cmd), false);
+    if (!ok) {
+      Log.println("  writeValue(false) failed; retrying with response");
+      ok = this->pRemoteCharacteristic301->writeValue(cmd, sizeof(cmd), true);
+    }
+    Log.printf("  writeValue returned %d\n", ok);
+  }
   return true;
 }
 
@@ -234,6 +293,11 @@ void FreestyleClient::notifyCallback(
   size_t length,
   bool isNotify)
 {
+  Log.printf("[notifyCallback] len=%u isNotify=%d\n", length, (int)isNotify);
+  if (length > 0) {
+    Log.printf("  first byte=0x%02x\n", pData[0]);
+  }
+
   notify_time = millis();
   notify_pData = pData;
   notify_length = length;
@@ -268,7 +332,15 @@ void FreestyleClient::handler() {
   // step 3 - Message was accepted
   if (this->notify_pData[0] == 0x02 && this->notify_pData[1] == 0x04) {
     Log.print("Writing 01 to command channel\n");
-    this->pRemoteCharacteristic301->writeValue(0x01, true);
+    {
+      uint8_t cmd[] = {0x01};
+      bool ok = this->pRemoteCharacteristic301->writeValue(cmd, sizeof(cmd), false);
+      if (!ok) {
+        Log.println("  writeValue(false) failed; retrying with response");
+        ok = this->pRemoteCharacteristic301->writeValue(cmd, sizeof(cmd), true);
+      }
+      Log.printf("  writeValue returned %d\n", ok);
+    }
   }
   // step 4 - Get the status response
   if (this->notify_pData[0] == 0x01 && this->notify_pData[1] == 0x00) {
